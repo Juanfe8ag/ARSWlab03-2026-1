@@ -4,7 +4,10 @@ import edu.eci.arsw.concurrency.PauseController;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static java.lang.Math.min;
 
 public final class Immortal implements Runnable {
   private final String name;
@@ -56,26 +59,42 @@ public final class Immortal implements Runnable {
   }
 
   private void fightNaive(Immortal other) {
+    scoreBoard.enterFight();
     synchronized (this) {
       synchronized (other) {
         if (this.health <= 0 || other.health <= 0) return;
-        other.health -= this.damage;
-        this.health += this.damage / 2;
+        int realDamage = min(damage, other.health);
+        other.health -= realDamage;
+        this.health += realDamage / 2;
         scoreBoard.recordFight();
+        if (other.health <= 0) {
+          population.remove(other);
+        }
       }
     }
+
+    scoreBoard.leaveFight();
   }
 
   private void fightOrdered(Immortal other) {
     Immortal first = this.name.compareTo(other.name) < 0 ? this : other;
     Immortal second = this.name.compareTo(other.name) < 0 ? other : this;
-    synchronized (first) {
-      synchronized (second) {
-        if (this.health <= 0 || other.health <= 0) return;
-        other.health -= this.damage;
-        this.health += this.damage / 2;
-        scoreBoard.recordFight();
+    scoreBoard.enterFight();
+    try {
+      synchronized (first) {
+        synchronized (second) {
+          if (this.health <= 0 || other.health <= 0) return;
+          int realDamage = min(damage, other.health);
+          other.health -= realDamage;
+          this.health += realDamage / 2;
+          scoreBoard.recordFight();
+          if (other.health <= 0) {
+            population.remove(other);
+          }
+        }
       }
+    } finally {
+      scoreBoard.leaveFight();
     }
   }
 }

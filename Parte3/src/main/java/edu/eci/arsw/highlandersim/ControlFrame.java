@@ -68,14 +68,18 @@ public final class ControlFrame extends JFrame {
     int damage = (Integer) damageSpinner.getValue();
     String fight = (String) fightMode.getSelectedItem();
     manager = new ImmortalManager(n, fight, health, damage);
+    long invariante = manager.totalHealth();
     manager.start();
-    output.setText("Simulation started with %d immortals (health=%d, damage=%d, fight=%s)%n"
-      .formatted(n, health, damage, fight));
+    output.setText("Simulation started with %d immortals (health=%d, damage=%d, fight=%s, invariante=%d)%n"
+      .formatted(n, health, damage, fight, invariante));
   }
 
   private void onPauseAndCheck(ActionEvent e) {
     if (manager == null) return;
     manager.pause();
+    while (manager.scoreBoard().activeFights() > 0) {
+      Thread.onSpinWait();
+    }
     List<Immortal> pop = manager.populationSnapshot();
     long sum = 0;
     StringBuilder sb = new StringBuilder();
@@ -101,6 +105,7 @@ public final class ControlFrame extends JFrame {
     if (manager != null) {
       manager.stop();
       manager = null;
+      output.setText("Simulation stopped. Start a new one.");
     }
   }
 

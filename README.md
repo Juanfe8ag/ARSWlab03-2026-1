@@ -23,4 +23,13 @@ vuelva a llenar el stock.
 Para la implementación de esta búsqueda se cambia el tipo de contador a un AtomicInteger, este se compartirá con los hilos que hacen la búsqueda
 y cuando lleguen al número límite de la alarma, todos los hilos pararán. El hecho de que sea Atomic hace que no haya condición de carrera.
 
+Link al repositorio del Lab01: https://github.com/Juanfe8ag/ARSWLab012026
+
 ## Tercera parte: Sincronización y Deadlocks con Highlander Simulator
+Lo primero fue calcular el invariante con N inmortales por H cantidad de vida. Al ejecutar el método de pausa, los resultados dan en un rango
+de entre 20 y 90. Muy alejado del real. Esto se da porque con cada pelea la vida total se reduce en 5. Además, en muchos puntos se daba un invariante
+negativo porque varios inmortales quedaban con -5 de vida. Por eso, sin implementaciones el invariante era vidaTotal - numeroPeleas * 5.
+De esa forma el invariante se cumple en todas las pausas y reanudaciones.
+
+Para remover a los inmortales muertos se cambia el ArrayList que los contenía por una colección ThreadSafe, en este caso, CopyOnWriteArrayList. Además, en
+la región bloqueada luego del combate se realiza una verificación de vida. Si tiene 0 o menos, se eliminará de la lista.
